@@ -1,9 +1,19 @@
+let csrfToken = null;
+
 async function api(path, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  const method = (options.method || "GET").toUpperCase();
+
+  if (method !== "GET" && csrfToken) {
+    headers["X-CSRF-Token"] = csrfToken;
+  }
+
   const response = await fetch(path, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
+    headers,
     credentials: "same-origin",
     ...options
   });
@@ -21,6 +31,12 @@ async function api(path, options = {}) {
 
 async function loadCurrentUser() {
   const data = await api("/api/me");
+
+  if (data.user && !csrfToken) {
+    const tokenData = await api("/api/csrf-token");
+    csrfToken = tokenData.csrfToken;
+  }
+
   return data.user;
 }
 
