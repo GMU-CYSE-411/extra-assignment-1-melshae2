@@ -1,3 +1,9 @@
+function addCell(row, value) {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+  row.appendChild(cell);
+}
+
 (async function bootstrapAdmin() {
   try {
     const user = await loadCurrentUser();
@@ -8,26 +14,28 @@
     }
 
     if (user.role !== "admin") {
-      document.getElementById("admin-warning").textContent =
-        "The client says this is not your area, but the page still tries to load admin data.";
-    } else {
-      document.getElementById("admin-warning").textContent = "Authenticated as admin.";
+      document.getElementById("admin-warning").textContent = "Admin access required.";
+      return;
     }
 
+    document.getElementById("admin-warning").textContent = "Authenticated as admin.";
+
     const result = await api("/api/admin/users");
-    document.getElementById("admin-users").innerHTML = result.users
-      .map(
-        (entry) => `
-          <tr>
-            <td>${entry.id}</td>
-            <td>${entry.username}</td>
-            <td>${entry.role}</td>
-            <td>${entry.displayName}</td>
-            <td>${entry.noteCount}</td>
-          </tr>
-        `
-      )
-      .join("");
+    const tableBody = document.getElementById("admin-users");
+
+    tableBody.textContent = "";
+
+    for (const entry of result.users) {
+      const row = document.createElement("tr");
+
+      addCell(row, entry.id);
+      addCell(row, entry.username);
+      addCell(row, entry.role);
+      addCell(row, entry.displayName);
+      addCell(row, entry.noteCount);
+
+      tableBody.appendChild(row);
+    }
   } catch (error) {
     document.getElementById("admin-warning").textContent = error.message;
   }
